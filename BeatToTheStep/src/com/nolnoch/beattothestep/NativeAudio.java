@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.beattothestep;
+package com.nolnoch.beattothestep;
 
 import android.app.Activity;
 import android.content.res.AssetManager;

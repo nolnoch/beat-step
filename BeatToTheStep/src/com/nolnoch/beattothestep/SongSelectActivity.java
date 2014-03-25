@@ -1,4 +1,4 @@
-package com.example.beattothestep;
+package com.nolnoch.beattothestep;
 
 public class SongSelectActivity {
 

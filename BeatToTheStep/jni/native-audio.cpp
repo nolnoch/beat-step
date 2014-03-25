@@ -15,12 +15,10 @@
  *
  */
 
-/* This is our own file to be used in the Beat to the Step Android application.
+/* This is a JNI example where we use native methods to play sounds
+ * using OpenSL ES. See the corresponding Java source file located at:
  *
- * Notes:
- *      SL_RATEPROP_PITCHCORAUDIO passed to setPropertyConstraints(fd, flag)
- *      should allow us to simply set the playback rate to the desired speed
- *      and not worry about pitch correction manually.
+ *   src/com/example/nativeaudio/NativeAudio/NativeAudio.java
  */
 
 #include <assert.h>
@@ -39,6 +37,15 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 
+// pre-recorded sound clips, both are 8 kHz mono 16-bit signed little endian
+
+static const char hello[] =
+#include "hello_clip.h"
+;
+
+static const char android[] =
+#include "android_clip.h"
+;
 
 // engine interfaces
 static SLObjectItf engineObject = NULL;
@@ -79,10 +86,30 @@ static SLObjectItf recorderObject = NULL;
 static SLRecordItf recorderRecord;
 static SLAndroidSimpleBufferQueueItf recorderBufferQueue;
 
+// synthesized sawtooth clip
+#define SAWTOOTH_FRAMES 8000
+static short sawtoothBuffer[SAWTOOTH_FRAMES];
+
+// 5 seconds of recorded audio at 16 kHz mono, 16-bit signed little endian
+#define RECORDER_FRAMES (16000 * 5)
+static short recorderBuffer[RECORDER_FRAMES];
+static unsigned recorderSize = 0;
+static SLmilliHertz recorderSR;
+
 // pointer and size of the next player buffer to enqueue, and number of remaining buffers
 static short *nextBuffer;
 static unsigned nextSize;
 static int nextCount;
+
+
+// synthesize a mono sawtooth wave and place it into a buffer (called automatically on load)
+__attribute__((constructor)) static void onDlOpen(void)
+{
+    unsigned i;
+    for (i = 0; i < SAWTOOTH_FRAMES; ++i) {
+        sawtoothBuffer[i] = 32768 - ((i % 100) * 660);
+    }
+}
 
 
 // this callback handler is called every time a buffer finishes playing
@@ -103,8 +130,24 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 }
 
 
+// this callback handler is called every time a buffer finishes recording
+void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
+{
+    assert(bq == bqRecorderBufferQueue);
+    assert(NULL == context);
+    // for streaming recording, here we would call Enqueue to give recorder the next buffer to fill
+    // but instead, this is a one-time buffer so we stop recording
+    SLresult result;
+    result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_STOPPED);
+    if (SL_RESULT_SUCCESS == result) {
+        recorderSize = RECORDER_FRAMES * sizeof(short);
+        recorderSR = SL_SAMPLINGRATE_16;
+    }
+}
+
+
 // create the engine and output mix objects
-void Java_com_nolnoch_playeractivity_BeatStep_createEngine(JNIEnv* env, jclass clazz)
+void Java_com_example_nativeaudio_NativeAudio_createEngine(JNIEnv* env, jclass clazz)
 {
     SLresult result;
 
@@ -152,7 +195,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_createEngine(JNIEnv* env, jclass c
 
 
 // create buffer queue audio player
-void Java_com_nolnoch_playeractivity_BeatStep_createBufferQueueAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_createBufferQueueAudioPlayer(JNIEnv* env,
         jclass clazz)
 {
     SLresult result;
@@ -225,7 +268,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_createBufferQueueAudioPlayer(JNIEn
 
 
 // create URI audio player
-jboolean Java_com_nolnoch_playeractivity_BeatStep_createUriAudioPlayer(JNIEnv* env, jclass clazz,
+jboolean Java_com_example_nativeaudio_NativeAudio_createUriAudioPlayer(JNIEnv* env, jclass clazz,
         jstring uri)
 {
     SLresult result;
@@ -292,7 +335,7 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_createUriAudioPlayer(JNIEnv* e
 
 // set the playing state for the URI audio player
 // to PLAYING (true) or PAUSED (false)
-void Java_com_nolnoch_playeractivity_BeatStep_setPlayingUriAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_setPlayingUriAudioPlayer(JNIEnv* env,
         jclass clazz, jboolean isPlaying)
 {
     SLresult result;
@@ -311,7 +354,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setPlayingUriAudioPlayer(JNIEnv* e
 
 
 // set the whole file looping state for the URI audio player
-void Java_com_nolnoch_playeractivity_BeatStep_setLoopingUriAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_setLoopingUriAudioPlayer(JNIEnv* env,
         jclass clazz, jboolean isLooping)
 {
     SLresult result;
@@ -341,7 +384,7 @@ static SLMuteSoloItf getMuteSolo()
         return bqPlayerMuteSolo;
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setChannelMuteUriAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_setChannelMuteUriAudioPlayer(JNIEnv* env,
         jclass clazz, jint chan, jboolean mute)
 {
     SLresult result;
@@ -353,7 +396,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setChannelMuteUriAudioPlayer(JNIEn
     }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setChannelSoloUriAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_setChannelSoloUriAudioPlayer(JNIEnv* env,
         jclass clazz, jint chan, jboolean solo)
 {
     SLresult result;
@@ -365,7 +408,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setChannelSoloUriAudioPlayer(JNIEn
     }
 }
 
-int Java_com_nolnoch_playeractivity_BeatStep_getNumChannelsUriAudioPlayer(JNIEnv* env, jclass clazz)
+int Java_com_example_nativeaudio_NativeAudio_getNumChannelsUriAudioPlayer(JNIEnv* env, jclass clazz)
 {
     SLuint8 numChannels;
     SLresult result;
@@ -396,7 +439,7 @@ static SLVolumeItf getVolume()
         return bqPlayerVolume;
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setVolumeUriAudioPlayer(JNIEnv* env, jclass clazz,
+void Java_com_example_nativeaudio_NativeAudio_setVolumeUriAudioPlayer(JNIEnv* env, jclass clazz,
         jint millibel)
 {
     SLresult result;
@@ -408,7 +451,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setVolumeUriAudioPlayer(JNIEnv* en
     }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setMuteUriAudioPlayer(JNIEnv* env, jclass clazz,
+void Java_com_example_nativeaudio_NativeAudio_setMuteUriAudioPlayer(JNIEnv* env, jclass clazz,
         jboolean mute)
 {
     SLresult result;
@@ -420,7 +463,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setMuteUriAudioPlayer(JNIEnv* env,
     }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_enableStereoPositionUriAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_enableStereoPositionUriAudioPlayer(JNIEnv* env,
         jclass clazz, jboolean enable)
 {
     SLresult result;
@@ -432,7 +475,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_enableStereoPositionUriAudioPlayer
     }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setStereoPositionUriAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_setStereoPositionUriAudioPlayer(JNIEnv* env,
         jclass clazz, jint permille)
 {
     SLresult result;
@@ -445,7 +488,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setStereoPositionUriAudioPlayer(JN
 }
 
 // enable reverb on the buffer queue player
-jboolean Java_com_nolnoch_playeractivity_BeatStep_enableReverb(JNIEnv* env, jclass clazz,
+jboolean Java_com_example_nativeaudio_NativeAudio_enableReverb(JNIEnv* env, jclass clazz,
         jboolean enabled)
 {
     SLresult result;
@@ -467,7 +510,7 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_enableReverb(JNIEnv* env, jcla
 
 
 // select the desired clip and play count, and enqueue the first buffer if idle
-jboolean Java_com_nolnoch_playeractivity_BeatStep_selectClip(JNIEnv* env, jclass clazz, jint which,
+jboolean Java_com_example_nativeaudio_NativeAudio_selectClip(JNIEnv* env, jclass clazz, jint which,
         jint count)
 {
     switch (which) {
@@ -521,7 +564,7 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_selectClip(JNIEnv* env, jclass
 
 
 // create asset audio player
-jboolean Java_com_nolnoch_playeractivity_BeatStep_createAssetAudioPlayer(JNIEnv* env, jclass clazz,
+jboolean Java_com_example_nativeaudio_NativeAudio_createAssetAudioPlayer(JNIEnv* env, jclass clazz,
         jobject assetManager, jstring filename)
 {
     SLresult result;
@@ -599,8 +642,9 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_createAssetAudioPlayer(JNIEnv*
     return JNI_TRUE;
 }
 
+
 // set the playing state for the asset audio player
-void Java_com_nolnoch_playeractivity_BeatStep_setPlayingAssetAudioPlayer(JNIEnv* env,
+void Java_com_example_nativeaudio_NativeAudio_setPlayingAssetAudioPlayer(JNIEnv* env,
         jclass clazz, jboolean isPlaying)
 {
     SLresult result;
@@ -617,8 +661,95 @@ void Java_com_nolnoch_playeractivity_BeatStep_setPlayingAssetAudioPlayer(JNIEnv*
 
 }
 
+
+// create audio recorder
+jboolean Java_com_example_nativeaudio_NativeAudio_createAudioRecorder(JNIEnv* env, jclass clazz)
+{
+    SLresult result;
+
+    // configure audio source
+    SLDataLocator_IODevice loc_dev = {SL_DATALOCATOR_IODEVICE, SL_IODEVICE_AUDIOINPUT,
+            SL_DEFAULTDEVICEID_AUDIOINPUT, NULL};
+    SLDataSource audioSrc = {&loc_dev, NULL};
+
+    // configure audio sink
+    SLDataLocator_AndroidSimpleBufferQueue loc_bq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
+    SLDataFormat_PCM format_pcm = {SL_DATAFORMAT_PCM, 1, SL_SAMPLINGRATE_16,
+        SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
+        SL_SPEAKER_FRONT_CENTER, SL_BYTEORDER_LITTLEENDIAN};
+    SLDataSink audioSnk = {&loc_bq, &format_pcm};
+
+    // create audio recorder
+    // (requires the RECORD_AUDIO permission)
+    const SLInterfaceID id[1] = {SL_IID_ANDROIDSIMPLEBUFFERQUEUE};
+    const SLboolean req[1] = {SL_BOOLEAN_TRUE};
+    result = (*engineEngine)->CreateAudioRecorder(engineEngine, &recorderObject, &audioSrc,
+            &audioSnk, 1, id, req);
+    if (SL_RESULT_SUCCESS != result) {
+        return JNI_FALSE;
+    }
+
+    // realize the audio recorder
+    result = (*recorderObject)->Realize(recorderObject, SL_BOOLEAN_FALSE);
+    if (SL_RESULT_SUCCESS != result) {
+        return JNI_FALSE;
+    }
+
+    // get the record interface
+    result = (*recorderObject)->GetInterface(recorderObject, SL_IID_RECORD, &recorderRecord);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
+    // get the buffer queue interface
+    result = (*recorderObject)->GetInterface(recorderObject, SL_IID_ANDROIDSIMPLEBUFFERQUEUE,
+            &recorderBufferQueue);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
+    // register callback on the buffer queue
+    result = (*recorderBufferQueue)->RegisterCallback(recorderBufferQueue, bqRecorderCallback,
+            NULL);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
+    return JNI_TRUE;
+}
+
+
+// set the recording state for the audio recorder
+void Java_com_example_nativeaudio_NativeAudio_startRecording(JNIEnv* env, jclass clazz)
+{
+    SLresult result;
+
+    // in case already recording, stop recording and clear buffer queue
+    result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_STOPPED);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+    result = (*recorderBufferQueue)->Clear(recorderBufferQueue);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
+    // the buffer is not valid for playback yet
+    recorderSize = 0;
+
+    // enqueue an empty buffer to be filled by the recorder
+    // (for streaming recording, we would enqueue at least 2 empty buffers to start things off)
+    result = (*recorderBufferQueue)->Enqueue(recorderBufferQueue, recorderBuffer,
+            RECORDER_FRAMES * sizeof(short));
+    // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
+    // which for this code example would indicate a programming error
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
+    // start recording
+    result = (*recorderRecord)->SetRecordState(recorderRecord, SL_RECORDSTATE_RECORDING);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+}
+
+
 // shut down the native audio system
-void Java_com_nolnoch_playeractivity_BeatStep_shutdown(JNIEnv* env, jclass clazz)
+void Java_com_example_nativeaudio_NativeAudio_shutdown(JNIEnv* env, jclass clazz)
 {
 
     // destroy buffer queue audio player object, and invalidate all associated interfaces
@@ -673,13 +804,5 @@ void Java_com_nolnoch_playeractivity_BeatStep_shutdown(JNIEnv* env, jclass clazz
         engineObject = NULL;
         engineEngine = NULL;
     }
-
-}
-
-long Java_com_nolnoch_plaeractivity_BeatStep_getPlaybackRate(JNIEnv *env, jclass clazz) {
-
-}
-
-void Java_com_nolnoch_plaeractivity_BeatStep_setPlaybackRate(JNIEnv *env, jclass clazz, long rate) {
 
 }
