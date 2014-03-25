@@ -1,5 +1,7 @@
 package com.nolnoch.beattothestep;
 
-public class SongSelectActivity {
+import android.app.Activity;
+
+public class SongSelectActivity extends Activity {
 
 }

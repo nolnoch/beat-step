@@ -6,6 +6,7 @@ import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -14,6 +15,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
 
 
 
@@ -23,6 +25,7 @@ public class PlayerActivity extends Activity {
 	private static final int TIME_INTERVAL = 60 / NUM_TIME_STEPS * 1000;
 	private static final int MIN_SPM = 30;
 	private static final int MAX_SPM = 180;
+	private static final int SETTINGS_RC = 1080;
 	private static final String DEBUG = "DEBUG";
 
 	static final int CLIP_NONE = 0;
@@ -107,6 +110,22 @@ public class PlayerActivity extends Activity {
 		getMenuInflater().inflate(R.menu.player_main, menu);
 		return true;
 	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.playlists:
+			startActivity(new Intent(this, PlaylistActivity.class));
+			break;
+		case R.id.action_settings:
+			startActivityForResult(new Intent(this, SettingsActivity.class), SETTINGS_RC);
+			break;
+		default:
+			return false;
+		}
+		
+		return true;
+	}
 
 	/* Called when the activity is about to be destroyed. */
 	@Override
@@ -174,8 +193,8 @@ public class PlayerActivity extends Activity {
 	public static native void shutdown();
 
 	// TODO Implement functions for time stretching.
-	public static native long getPlaybackRate();
-	public static native void setPlaybackRate(long rate);
+	public static native int getPlaybackRate();
+	public static native void setPlaybackRate(int rate);
 
 	/** Load jni .so on initialization */
 	static {
