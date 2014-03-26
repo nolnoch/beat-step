@@ -102,9 +102,11 @@ void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context)
 
 
 // create the engine and output mix objects
-void Java_com_nolnoch_playeractivity_BeatStep_createEngine(JNIEnv* env, jclass clazz)
+void Java_com_nolnoch_beattothestep_PlayerActivity_createEngine(JNIEnv* env, jclass clazz)
 {
   SLresult result;
+
+  assert(env != NULL);
 
   // create engine
   result = slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
@@ -150,10 +152,12 @@ void Java_com_nolnoch_playeractivity_BeatStep_createEngine(JNIEnv* env, jclass c
 
 
 // create buffer queue audio player
-void Java_com_nolnoch_playeractivity_BeatStep_createBufferQueueAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_createBufferQueueAudioPlayer(JNIEnv* env,
     jclass clazz)
 {
   SLresult result;
+
+  assert(env != NULL);
 
   // configure audio source
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2};
@@ -228,7 +232,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_createBufferQueueAudioPlayer(JNIEn
 
 
 // create URI audio player
-jboolean Java_com_nolnoch_playeractivity_BeatStep_createUriAudioPlayer(JNIEnv *env, jclass clazz,
+jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createUriAudioPlayer(JNIEnv *env, jclass clazz,
     jstring uri)
 {
   SLresult result;
@@ -300,7 +304,7 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_createUriAudioPlayer(JNIEnv *e
 
 // set the playing state for the URI audio player
 // to PLAYING (true) or PAUSED (false)
-void Java_com_nolnoch_playeractivity_BeatStep_setPlayingUriAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setPlayingUriAudioPlayer(JNIEnv* env,
     jclass clazz, jboolean isPlaying)
 {
   SLresult result;
@@ -319,7 +323,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setPlayingUriAudioPlayer(JNIEnv* e
 
 
 // set the whole file looping state for the URI audio player
-void Java_com_nolnoch_playeractivity_BeatStep_setLoopingUriAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setLoopingUriAudioPlayer(JNIEnv* env,
     jclass clazz, jboolean isLooping)
 {
   SLresult result;
@@ -349,7 +353,7 @@ static SLMuteSoloItf getMuteSolo()
     return bqPlayerMuteSolo;
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setChannelMuteUriAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setChannelMuteUriAudioPlayer(JNIEnv* env,
     jclass clazz, jint chan, jboolean mute)
 {
   SLresult result;
@@ -361,7 +365,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setChannelMuteUriAudioPlayer(JNIEn
   }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setChannelSoloUriAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setChannelSoloUriAudioPlayer(JNIEnv* env,
     jclass clazz, jint chan, jboolean solo)
 {
   SLresult result;
@@ -373,7 +377,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setChannelSoloUriAudioPlayer(JNIEn
   }
 }
 
-int Java_com_nolnoch_playeractivity_BeatStep_getNumChannelsUriAudioPlayer(JNIEnv* env, jclass clazz)
+int Java_com_nolnoch_beattothestep_PlayerActivity_getNumChannelsUriAudioPlayer(JNIEnv* env, jclass clazz)
 {
   SLuint8 numChannels;
   SLresult result;
@@ -404,7 +408,7 @@ static SLVolumeItf getVolume()
     return bqPlayerVolume;
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setVolumeUriAudioPlayer(JNIEnv* env, jclass clazz,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setVolumeUriAudioPlayer(JNIEnv* env, jclass clazz,
     jint millibel)
 {
   SLresult result;
@@ -416,7 +420,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setVolumeUriAudioPlayer(JNIEnv* en
   }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setMuteUriAudioPlayer(JNIEnv* env, jclass clazz,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setMuteUriAudioPlayer(JNIEnv* env, jclass clazz,
     jboolean mute)
 {
   SLresult result;
@@ -428,7 +432,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setMuteUriAudioPlayer(JNIEnv* env,
   }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_enableStereoPositionUriAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_enableStereoPositionUriAudioPlayer(JNIEnv* env,
     jclass clazz, jboolean enable)
 {
   SLresult result;
@@ -440,7 +444,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_enableStereoPositionUriAudioPlayer
   }
 }
 
-void Java_com_nolnoch_playeractivity_BeatStep_setStereoPositionUriAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setStereoPositionUriAudioPlayer(JNIEnv* env,
     jclass clazz, jint permille)
 {
   SLresult result;
@@ -453,7 +457,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setStereoPositionUriAudioPlayer(JN
 }
 
 // enable reverb on the buffer queue player
-jboolean Java_com_nolnoch_playeractivity_BeatStep_enableReverb(JNIEnv* env, jclass clazz,
+jboolean Java_com_nolnoch_beattothestep_PlayerActivity_enableReverb(JNIEnv* env, jclass clazz,
     jboolean enabled)
 {
   SLresult result;
@@ -475,7 +479,7 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_enableReverb(JNIEnv* env, jcla
 
 
 // select the desired clip and play count, and enqueue the first buffer if idle
-jboolean Java_com_nolnoch_playeractivity_BeatStep_selectClip(JNIEnv* env, jclass clazz, jint which,
+jboolean Java_com_nolnoch_beattothestep_PlayerActivity_selectClip(JNIEnv* env, jclass clazz, jint which,
     jint count)
 {
   switch (which) {
@@ -504,10 +508,12 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_selectClip(JNIEnv* env, jclass
 
 
 // create asset audio player
-jboolean Java_com_nolnoch_playeractivity_BeatStep_createAssetAudioPlayer(JNIEnv* env, jclass clazz,
+jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createAssetAudioPlayer(JNIEnv* env, jclass clazz,
     jobject assetManager, jstring filename)
 {
   SLresult result;
+
+  assert(env != NULL);
 
   // convert Java string to UTF-8
   const char *utf8 = (*env)->GetStringUTFChars(env, filename, NULL);
@@ -588,7 +594,7 @@ jboolean Java_com_nolnoch_playeractivity_BeatStep_createAssetAudioPlayer(JNIEnv*
 }
 
 // set the playing state for the asset audio player
-void Java_com_nolnoch_playeractivity_BeatStep_setPlayingAssetAudioPlayer(JNIEnv* env,
+void Java_com_nolnoch_beattothestep_PlayerActivity_setPlayingAssetAudioPlayer(JNIEnv* env,
     jclass clazz, jboolean isPlaying)
 {
   SLresult result;
@@ -606,7 +612,7 @@ void Java_com_nolnoch_playeractivity_BeatStep_setPlayingAssetAudioPlayer(JNIEnv*
 }
 
 // shut down the native audio system
-void Java_com_nolnoch_playeractivity_BeatStep_shutdown(JNIEnv* env, jclass clazz)
+void Java_com_nolnoch_beattothestep_PlayerActivity_shutdown(JNIEnv* env, jclass clazz)
 {
 
   // destroy buffer queue audio player object, and invalidate all associated interfaces
@@ -669,7 +675,7 @@ static SLPlaybackRateItf getRate()
     return bqPlayerRate;
 }
 
-int Java_com_nolnoch_plaeractivity_BeatStep_getPlaybackRate(JNIEnv *env, jclass clazz) {
+int Java_com_nolnoch_beattothestep_PlayerActivity_getPlaybackRate(JNIEnv *env, jclass clazz) {
   SLpermille rate;
   SLresult result;
 
@@ -684,7 +690,7 @@ int Java_com_nolnoch_plaeractivity_BeatStep_getPlaybackRate(JNIEnv *env, jclass 
   return rate;
 }
 
-void Java_com_nolnoch_plaeractivity_BeatStep_setPlaybackRate(JNIEnv *env, jclass clazz, jint rate) {
+void Java_com_nolnoch_beattothestep_PlayerActivity_setPlaybackRate(JNIEnv *env, jclass clazz, jint rate) {
   SLresult result;
 
   SLpermille pRate = rate;

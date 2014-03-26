@@ -1,7 +1,7 @@
 package com.nolnoch.beattothestep;
 
 import java.io.File;
-import java.io.IOException;
+//import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -24,10 +24,10 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
-import com.echonest.api.v4.EchoNestAPI;
-import com.echonest.api.v4.EchoNestException;
-import com.echonest.api.v4.Track;
-import com.echonest.api.v4.TrackAnalysis;
+//import com.echonest.api.v4.EchoNestAPI;
+//import com.echonest.api.v4.EchoNestException;
+//import com.echonest.api.v4.Track;
+//import com.echonest.api.v4.TrackAnalysis;
 
 
 
@@ -53,11 +53,11 @@ public class PlayerActivity extends Activity {
 	static double spm, bpm;
 	// static int spm_old, spm_delta;
 
-	private static EchoNestAPI en;
+	//private static EchoNestAPI en;
 	private String enAPIKey = "AWC7MGBH4CCN9Z8QX"; 
-	private TrackAnalysis trAnalysis;
-	private AssetManager am;
-	private String demo_song = "une_seule_asset.mp3";
+	//private TrackAnalysis trAnalysis;
+	private static AssetManager am;
+	private static String demo_song = "une_seule_asset.mp3";
 
 	private TimerTask stepTask;
 	private Timer stepTimer;
@@ -73,12 +73,16 @@ public class PlayerActivity extends Activity {
 
 		stepStart = new ArrayList<Long>(NUM_TIME_STEPS);
 		tick = 0;
+		
+		createEngine();
+        createBufferQueueAudioPlayer();
 
-		initEchoNestAPI();
-		loadAudioAsset();
+		//initEchoNestAPI();
+		//loadAudioAsset();
 
-		createStepTimer();
-		createStepSensor();
+		if (createStepSensor())
+			createStepTimer();
+		// else custom algorithm? (messy)
 		
 		// initUIControls();
 	}
@@ -107,13 +111,14 @@ public class PlayerActivity extends Activity {
 	}
 
 	private void initEchoNestAPI() {
-		en = new EchoNestAPI(enAPIKey);
+		//en = new EchoNestAPI(enAPIKey);
 	}
 
 	private void loadAudioAsset() {
 		am = getAssets();
-		File song = new File(demo_song);
+		//File song = new File(demo_song);
 
+		/*
 		try {
 			try {
 				Track tr = en.uploadTrack(song);
@@ -131,6 +136,7 @@ public class PlayerActivity extends Activity {
 		} catch (EchoNestException e) {
 			Log.d(DEBUG, "EchoNest Error: " + e);
 		}
+		*/
 	}
 
 	private void createStepTimer() {
@@ -177,12 +183,15 @@ public class PlayerActivity extends Activity {
 		stepTimer = new Timer("stepTimer", true);
 	}
 
-	private void createStepSensor() {
+	private boolean createStepSensor() {
 		stepListener = new StepListener();
 		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 		stepSensor = (Sensor) sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-		assert (stepSensor == null);
-		sensorManager.registerListener(stepListener, stepSensor, SensorManager.SENSOR_DELAY_NORMAL);
+		
+		if (stepSensor != null)
+			return sensorManager.registerListener(stepListener, stepSensor, SensorManager.SENSOR_DELAY_NORMAL);
+		else
+			return false;
 	}
 
 	private void initStepEngine() {
@@ -192,6 +201,7 @@ public class PlayerActivity extends Activity {
 	private void playDemoAsset() {
 		if (!apCreated)
 			apCreated = createAssetAudioPlayer(am, demo_song);
+		Log.d(DEBUG, "AssetPlayer created.");
 		setPlayingAssetAudioPlayer(isPlayingAsset);
 	}
 	
@@ -311,7 +321,7 @@ public class PlayerActivity extends Activity {
 
 	/** Load jni .so on initialization */
 	static {
-		System.loadLibrary("native-audio-jni");
+		System.loadLibrary("beat-step");
 	}
 
 }
