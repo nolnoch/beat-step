@@ -581,9 +581,9 @@ jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createAssetAudioPlayer(JN
   (void)result;
 
   // get the volume interface
-  result = (*fdPlayerObject)->GetInterface(fdPlayerObject, SL_IID_PLAYBACKRATE, &fdPlayerRate);
-  assert(SL_RESULT_SUCCESS == result);
-  (void)result;
+  //result = (*fdPlayerObject)->GetInterface(fdPlayerObject, SL_IID_PLAYBACKRATE, &fdPlayerRate);
+  //assert(SL_RESULT_SUCCESS == result);
+  //(void)result;
 
   // enable whole file looping
   result = (*fdPlayerSeek)->SetLoop(fdPlayerSeek, SL_BOOLEAN_TRUE, 0, SL_TIME_UNKNOWN);

@@ -56,8 +56,8 @@ public class PlayerActivity extends Activity {
 	//private static EchoNestAPI en;
 	private String enAPIKey = "AWC7MGBH4CCN9Z8QX"; 
 	//private TrackAnalysis trAnalysis;
-	private static AssetManager am;
-	private static String demo_song = "une_seule_asset.mp3";
+	public static AssetManager am;
+	public static String demo_song = "une_seule_asset.mp3";
 
 	private TimerTask stepTask;
 	private Timer stepTimer;
@@ -115,7 +115,6 @@ public class PlayerActivity extends Activity {
 	}
 
 	private void loadAudioAsset() {
-		am = getAssets();
 		//File song = new File(demo_song);
 
 		/*
@@ -199,9 +198,12 @@ public class PlayerActivity extends Activity {
 	}
 	
 	private void playDemoAsset() {
-		if (!apCreated)
+		if (!apCreated) {
+			am = getAssets();
 			apCreated = createAssetAudioPlayer(am, demo_song);
-		Log.d(DEBUG, "AssetPlayer created.");
+			Log.d(DEBUG, "AssetPlayer created.");
+		}
+		
 		setPlayingAssetAudioPlayer(isPlayingAsset);
 	}
 	
@@ -210,6 +212,7 @@ public class PlayerActivity extends Activity {
 	}
 	
 	public void playButton(View v) {
+		isPlayingAsset = !isPlayingAsset;
 		playDemoAsset();
 	}
 	
