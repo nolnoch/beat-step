@@ -8,9 +8,17 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".PlayerActivity" >
 
-    <TextView
+    <Button
+        android:id="@+id/count_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+        android:onClick="countButton"
+        android:text="@string/io_count" />
+    <Button
+        android:id="@+id/player_play"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="playButton"
+        android:text="@string/music_play" />
 
 </RelativeLayout>
