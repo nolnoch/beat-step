@@ -4,7 +4,7 @@
         android:id="@+id/playlists"
         android:icon="@drawable/ic_action_copy"
         android:showAsAction="ifRoom"
-        android:title="@string/playlists" />
+        android:title="@string/action_playlists" />
     <item
         android:id="@+id/action_settings"
         android:icon="@drawable/ic_action_settings"
