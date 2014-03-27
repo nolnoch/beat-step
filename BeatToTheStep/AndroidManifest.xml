@@ -31,6 +31,22 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nolnoch.beattothestep.PlayerActivity" />
         </activity>
+        <activity
+            android:name="com.nolnoch.beattothestep.PlaylistActivity"
+            android:label="@string/action_playlists"
+            android:parentActivityName="com.nolnoch.beattothestep.PlayerActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.nolnoch.beattothestep.PlayerActivity" />
+        </activity>
+        <activity
+            android:name="com.nolnoch.beattothestep.SongSelectActivity"
+            android:label="@string/action_songs"
+            android:parentActivityName="com.nolnoch.beattothestep.PlaylistActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.nolnoch.beattothestep.PlaylistActivity" />
+        </activity>
     </application>
 
 </manifest>

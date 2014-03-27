@@ -1,7 +1,7 @@
 package com.nolnoch.beattothestep;
 
 import java.io.File;
-//import java.io.IOException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -24,10 +24,10 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 
-//import com.echonest.api.v4.EchoNestAPI;
-//import com.echonest.api.v4.EchoNestException;
-//import com.echonest.api.v4.Track;
-//import com.echonest.api.v4.TrackAnalysis;
+import com.echonest.api.v4.EchoNestAPI;
+import com.echonest.api.v4.EchoNestException;
+import com.echonest.api.v4.Track;
+import com.echonest.api.v4.TrackAnalysis;
 
 
 
@@ -45,17 +45,19 @@ public class PlayerActivity extends Activity {
 
 	static boolean isPlayingAsset = false;
 	static boolean isPlayingUri = false;
+	private boolean stepCounting = false;
 	private boolean apCreated = false;
+	
 
 	private ArrayList<Long> stepStart;
 	private long stepCurrent, stepDelta;
 	private int tick;
 	static double spm, bpm;
-	// static int spm_old, spm_delta;
+	static int spm_old, spm_delta;
 
-	//private static EchoNestAPI en;
+	private static EchoNestAPI en;
 	private String enAPIKey = "AWC7MGBH4CCN9Z8QX"; 
-	//private TrackAnalysis trAnalysis;
+	private TrackAnalysis trAnalysis;
 	public static AssetManager am;
 	public static String demo_song = "une_seule_asset.mp3";
 
@@ -80,9 +82,12 @@ public class PlayerActivity extends Activity {
 		//initEchoNestAPI();
 		//loadAudioAsset();
 
-		if (createStepSensor())
+		stepCounting = createStepSensor();
+		if (stepCounting)
 			createStepTimer();
-		// else custom algorithm? (messy)
+		else {
+			// custom algorithm to detect step? (ugh)
+		}
 		
 		// initUIControls();
 	}
@@ -111,13 +116,12 @@ public class PlayerActivity extends Activity {
 	}
 
 	private void initEchoNestAPI() {
-		//en = new EchoNestAPI(enAPIKey);
+		en = new EchoNestAPI(enAPIKey);
 	}
 
 	private void loadAudioAsset() {
 		File song = new File(demo_song);
 
-		/*
 		try {
 			try {
 				Track tr = en.uploadTrack(song);
@@ -135,7 +139,7 @@ public class PlayerActivity extends Activity {
 		} catch (EchoNestException e) {
 			Log.d(DEBUG, "EchoNest Error: " + e);
 		}
-		*/
+
 	}
 
 	private void createStepTimer() {
@@ -248,8 +252,12 @@ public class PlayerActivity extends Activity {
 	
 	@Override
 	protected void onResume() {
-		if (createStepSensor())
+		stepCounting = createStepSensor();
+		if (stepCounting)
 			createStepTimer();
+		else {
+			// custom algorithm to detect step? (ugh)
+		}
 		
 		super.onResume();
 	}
@@ -269,9 +277,11 @@ public class PlayerActivity extends Activity {
 		}
 		
 
-		//stepTimer.cancel();
-		//stepTimer.purge();
-		//sensorManager.unregisterListener(stepListener);
+		if (stepCounting) {
+			stepTimer.cancel();
+			stepTimer.purge();
+			sensorManager.unregisterListener(stepListener);
+		}
 
 		super.onPause();
 	}

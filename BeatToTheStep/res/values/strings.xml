@@ -4,6 +4,7 @@
     <string name="app_name">Beat to the Step</string>
     <string name="action_settings">Settings</string>
     <string name="action_playlists">Playlists</string>
+    <string name="action_songs">Songs</string>
     <string name="music_song_title">Track</string>
     <string name="music_artist_title">Artist</string>
     <string name="music_bpm_count">BPM 000</string>
