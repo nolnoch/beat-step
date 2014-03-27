@@ -115,7 +115,7 @@ public class PlayerActivity extends Activity {
 	}
 
 	private void loadAudioAsset() {
-		//File song = new File(demo_song);
+		File song = new File(demo_song);
 
 		/*
 		try {
@@ -211,7 +211,7 @@ public class PlayerActivity extends Activity {
 		initStepEngine();
 	}
 	
-	public void playButton(View v) {
+	public void playMusic(View v) {
 		isPlayingAsset = !isPlayingAsset;
 		playDemoAsset();
 	}
@@ -223,7 +223,7 @@ public class PlayerActivity extends Activity {
 		
 		// TODO Change native Uri functions to native Asset functions.
 		
-		((SeekBar) findViewById(R.id.pan_uri)).setOnSeekBarChangeListener(
+		((SeekBar) findViewById(R.id.song_seekbar)).setOnSeekBarChangeListener(
                 new OnSeekBarChangeListener() {
             int lastProgress = 100;
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -238,47 +238,48 @@ public class PlayerActivity extends Activity {
             }
         });
 		
-		((Button) findViewById(R.id.pause_uri)).setOnClickListener(new OnClickListener() {
+		((Button) findViewById(R.id.play_pause)).setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
-                setPlayingUriAudioPlayer(false);
-             }
-        });
-		
-		((Button) findViewById(R.id.play_uri)).setOnClickListener(new OnClickListener() {
-            public void onClick(View view) {
-                setPlayingUriAudioPlayer(true);
+            	isPlayingAsset = !isPlayingAsset;
+        		playDemoAsset();
              }
         });
 	}
+	
+	@Override
+	protected void onResume() {
+		if (createStepSensor())
+			createStepTimer();
+		
+		super.onResume();
+	}
 
-	/* Called when the activity is about to be destroyed. */
 	@Override
 	protected void onPause()
 	{
 		// turn off all audio
 		selectClip(CLIP_NONE, 0);
-		isPlayingAsset = false;
-		setPlayingAssetAudioPlayer(false);
-		isPlayingUri = false;
-		setPlayingUriAudioPlayer(false);
+		if (isPlayingAsset) {
+			isPlayingAsset = false;
+			setPlayingAssetAudioPlayer(false);
+		}
+		if (isPlayingUri) {
+			isPlayingUri = false;
+			setPlayingUriAudioPlayer(false);
+		}
+		
 
-		stepTimer.cancel();
-		stepTimer.purge();
-		sensorManager.unregisterListener(stepListener);
+		//stepTimer.cancel();
+		//stepTimer.purge();
+		//sensorManager.unregisterListener(stepListener);
 
 		super.onPause();
 	}
 
-	/* Called when the activity is about to be destroyed. */
 	@Override
 	protected void onDestroy()
 	{
 		shutdown();
-
-		stepTimer.cancel();
-		stepTimer.purge();
-		sensorManager.unregisterListener(stepListener);
-
 		super.onDestroy();
 	}
 

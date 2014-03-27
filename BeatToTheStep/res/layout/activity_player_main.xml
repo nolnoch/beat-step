@@ -53,13 +53,13 @@
 
     <ImageView
         android:id="@+id/album_art"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
         android:layout_gravity="center_horizontal"
-        android:layout_margin="10dp"
+        android:layout_marginTop="15dp"
         android:contentDescription="@string/music_album_art"
-        android:maxHeight="200dp"
-        android:maxWidth="200dp"
+        android:maxHeight="250dp"
+        android:maxWidth="250dp"
         android:scaleType="centerCrop"
         android:src="@drawable/default_album" />
 
@@ -73,7 +73,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp" />
+            android:layout_marginBottom="15dp"
+            android:layout_marginTop="15dp" />
 
         <LinearLayout
             style="?android:attr/buttonBarStyle"
@@ -87,37 +88,36 @@
 
             <ImageButton
                 android:id="@+id/rewind"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginRight="25dp"
                 android:contentDescription="@string/music_rewind"
                 android:scaleType="fitXY"
-                android:src="@drawable/media_previous"
-                style="?android:attr/buttonBarButtonStyle" />
+                android:src="@drawable/media_previous" />
 
             <ImageButton
                 android:id="@+id/play_pause"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_marginLeft="30dp"
-                android:layout_marginRight="30dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginRight="25dp"
                 android:contentDescription="@string/music_play_pause"
                 android:scaleType="fitXY"
-                android:src="@drawable/media_pause"
-                style="?android:attr/buttonBarButtonStyle" />
+                android:onClick="playMusic"
+                android:src="@drawable/media_pause" />
 
             <ImageButton
                 android:id="@+id/fast_forward"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginTop="5dp"
+                android:layout_marginLeft="25dp"
                 android:contentDescription="@string/music_fast_forward"
                 android:scaleType="fitXY"
-                android:src="@drawable/media_next"
-                style="?android:attr/buttonBarButtonStyle" />
+                android:src="@drawable/media_next" />
+
         </LinearLayout>
     </RelativeLayout>
 
