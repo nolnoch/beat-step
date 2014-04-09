@@ -6,9 +6,9 @@ CSID:  nolnoch
 Email: nolnoch@cs.utexas.edu
 
 Name2: Nathan Zuiker
-EID:   <unknown>
-CSID:  <unknown>
-Email: <unknown>
+EID:   nrz92
+CSID:  nrzuiker
+Email: nate_h20polo@hotmail.com
 
 
 Current Functionality:
