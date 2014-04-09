@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -217,6 +218,13 @@ public class PlayerActivity extends Activity {
 	
 	public void playMusic(View v) {
 		isPlayingAsset = !isPlayingAsset;
+		Button playPause = (Button) findViewById(R.id.play_pause);
+		if(isPlayingAsset){
+			playPause.setImageResource(R.drawable.media_pause);
+		}
+		else {
+			playPause.setImageResource(R.drawable.media_play);
+		}
 		playDemoAsset();
 	}
 	
