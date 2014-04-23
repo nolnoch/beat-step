@@ -106,7 +106,7 @@
                 android:contentDescription="@string/music_play_pause"
                 android:scaleType="fitXY"
                 android:onClick="playMusic"
-                android:src="@drawable/media_pause" />
+                android:src="@drawable/media_play" />
 
             <ImageButton
                 android:id="@+id/fast_forward"
@@ -120,5 +120,13 @@
 
         </LinearLayout>
     </RelativeLayout>
+    
+    <SeekBar
+            android:id="@+id/rate_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="15dp"
+            android:layout_marginTop="15dp" />
 
 </LinearLayout>
