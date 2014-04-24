@@ -234,9 +234,9 @@ public class PlayerActivity extends Activity {
 			isPlayingAsset = !isPlayingAsset;
 
 			if (isPlayingAsset) {
-				playPause.setImageResource(R.drawable.media_pause);
+				playPause.setBackgroundResource(R.drawable.media_pause);
 			} else {
-				playPause.setImageResource(R.drawable.media_play);
+				playPause.setBackgroundResource(R.drawable.media_play);
 			}
 
 			playDemoAsset();
