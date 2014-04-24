@@ -17,9 +17,11 @@
     <string name="playlists_title">Playlists</string>
     <string name="playlists_none">No playlists.</string>
     <string name="playlists_new">New Playlist</string>
-    <string name="songs_playlist_name">Playlist Name</string>
+    <string name="songs_playlist_name">Local Media</string>
     <string name="button_save">Save</string>
     <string name="button_cancel">Cancel</string>
+    <string name="button_select">Select Song</string>
+    <string name="no_notes">No music.</string>
     
     <string-array name="uri_spinner_array">
         <item>http://upload.wikimedia.org/wikipedia/commons/6/6d/Banana.ogg</item>

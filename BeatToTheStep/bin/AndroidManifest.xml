@@ -8,6 +8,7 @@
         android:minSdkVersion="19"
         android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -32,20 +33,12 @@
                 android:value="com.nolnoch.beattothestep.PlayerActivity" />
         </activity>
         <activity
-            android:name="com.nolnoch.beattothestep.PlaylistActivity"
-            android:label="@string/action_playlists"
+            android:name="com.nolnoch.beattothestep.SongSelectActivity"
+            android:label="@string/action_songs"
             android:parentActivityName="com.nolnoch.beattothestep.PlayerActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.nolnoch.beattothestep.PlayerActivity" />
-        </activity>
-        <activity
-            android:name="com.nolnoch.beattothestep.SongSelectActivity"
-            android:label="@string/action_songs"
-            android:parentActivityName="com.nolnoch.beattothestep.PlaylistActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.nolnoch.beattothestep.PlaylistActivity" />
         </activity>
     </application>
 

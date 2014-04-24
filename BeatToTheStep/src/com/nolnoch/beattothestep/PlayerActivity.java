@@ -10,6 +10,7 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -43,6 +44,7 @@ public class PlayerActivity extends Activity {
 	private static final int NUM_TIME_STEPS = 15;
 	private static final int TIME_INTERVAL = 60 / NUM_TIME_STEPS * ONE_SECOND;
 	private static final int SETTINGS_RC = 1080;
+	private static final int SELECT_RC = 2020;
 	private static final int CLIP_NONE = 0;
 	private static final double MIN_SPM = 30.0d;
 	private static final double MAX_SPM = 180.0d;
@@ -69,6 +71,8 @@ public class PlayerActivity extends Activity {
 
 	private TimerTask stepTask;
 	private Timer stepTimer;
+	private ProgressDialog trAnalyzing;
+	private Context context;
 
 	private SensorEventListener stepListener;
 	private SensorManager sensorManager;
@@ -79,25 +83,23 @@ public class PlayerActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_player_main);
 
+		context = getApplicationContext();
+
 		stepStart = new ArrayList<Long>(NUM_TIME_STEPS);
 		tick = 0;
-		
-		setupDemoTrack();
 
 		createEngine();
 		createBufferQueueAudioPlayer();
 
 		initEchoNestAPI();
-		loadAudioAsset();
 
 		stepCounting = createStepSensor();
-		if (stepCounting)
+		if (stepCounting) {
 			createStepTimer();
-		else {
-			// custom algorithm to detect step? (ugh)
+			Log.d(DEBUG, "Step Counter loaded.");
 		}
 
-		// initUIControls();
+		initUIControls();
 	}
 
 	@Override
@@ -110,9 +112,6 @@ public class PlayerActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.playlists:
-			startActivity(new Intent(this, PlaylistActivity.class));
-			break;
 		case R.id.action_settings:
 			startActivityForResult(new Intent(this, SettingsActivity.class), SETTINGS_RC);
 			break;
@@ -123,9 +122,15 @@ public class PlayerActivity extends Activity {
 		return true;
 	}
 	
+	public void launchSelectSong(View v) {
+		startActivityForResult(new Intent(this, SongSelectActivity.class), SELECT_RC);
+	}
+
 	private void setupDemoTrack() {
 		TextView tv;
 		
+		loadAudioAsset(demo_song);
+
 		tv = (TextView) findViewById(R.id.song_title);
 		tv.setText("Une Seule Vie");
 		tv = (TextView) findViewById(R.id.artist_title);
@@ -136,46 +141,21 @@ public class PlayerActivity extends Activity {
 		en = new EchoNestAPI(enAPIKey);
 	}
 
-	private void loadAudioAsset() {
-		// Unpack the asset track to a temporary file.
-		File song = new File(getCacheDir()+ "/" + demo_song);
-		if (!song.exists()) try {
+	private void loadAudioAsset(String path) {
+		File song = new File(path);
 
-			InputStream is = getAssets().open(demo_song);
-			int size = is.available();
-			byte[] buffer = new byte[size];
-			is.read(buffer);
-			is.close();
-
-
-			FileOutputStream fos = new FileOutputStream(song);
-			fos.write(buffer);
-			fos.close();
-		} catch (Exception e) { throw new RuntimeException(e); }
+		// Display analysis wait animation.
+		trAnalyzing = ProgressDialog.show(this, "", "Analyzing track...", true, false);
 
 		// Submit the song for analysis.
 		AnalyzeTrackTask att = new AnalyzeTrackTask();
 		att.execute(song);
-		try {
-			trAnalyzed = att.get();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		// Display result.
-		if (trAnalyzed) {
-			// stuff
-		}
 	}
 
 	private void postAnalysis() {
 		bpm = trAnalysis.getTempo();
 		spm = bpm;
-		
+
 		TextView tv = (TextView) findViewById(R.id.bpm_count);
 		tv.setText("" + bpm);
 		tv = (TextView) findViewById(R.id.spm_count);
@@ -228,15 +208,6 @@ public class PlayerActivity extends Activity {
 		else
 			return false;
 	}
-	
-	private void updateSPMandPlayback() {
-		// Until beat detection is working, use variable step rate.
-		if (spm_old != 0) {
-			spm_delta = ((spm - spm_old) / spm_old * 1000) + 1000;
-			setPlaybackRate((int) spm_delta);
-		}
-		spm_old = spm;
-	}
 
 	private void initStepEngine() {
 		stepTimer.scheduleAtFixedRate(stepTask, 0, TIME_INTERVAL);
@@ -259,39 +230,30 @@ public class PlayerActivity extends Activity {
 	public void playMusic(View v) {
 		ImageButton playPause = (ImageButton) findViewById(R.id.play_pause);
 
-		isPlayingAsset = !isPlayingAsset;
+		if (spm != 0) {
+			isPlayingAsset = !isPlayingAsset;
 
-		if (isPlayingAsset) {
-			playPause.setImageResource(R.drawable.media_pause);
+			if (isPlayingAsset) {
+				playPause.setImageResource(R.drawable.media_pause);
+			} else {
+				playPause.setImageResource(R.drawable.media_play);
+			}
+
+			playDemoAsset();
 		} else {
-			playPause.setImageResource(R.drawable.media_play);
+			Toast.makeText(
+					getApplicationContext(),
+					"No track loaded to play.",
+					Toast.LENGTH_SHORT
+					).show();
 		}
-
-		playDemoAsset();
 	}
 
 	public void initUIControls() {
-		// Enable seeking through track.
-		SeekBar trackPos = (SeekBar) findViewById(R.id.song_seekbar);
-		trackPos.setMax(100);
-		trackPos.setProgress(0);
-		trackPos.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
-			int lastProgress = 100;
-			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-				assert (progress >= 0 && progress <= 100);
-				lastProgress = progress;
-			}
-			public void onStartTrackingTouch(SeekBar seekBar) {
-			}
-			public void onStopTrackingTouch(SeekBar seekBar) {
-				int permille = (lastProgress - 50) * 20;
-				setStereoPositionUriAudioPlayer(permille);
-			}
-		});
-		
 		// If step counter is not working, use slider to control SPM manually.
 		SeekBar stepPos = (SeekBar) findViewById(R.id.rate_seekbar);
 		if (!stepCounting) {
+			spm_old = spm;
 			stepPos.setVisibility(View.VISIBLE);
 			stepPos.setMax(100);
 			stepPos.setProgress(50);
@@ -299,19 +261,36 @@ public class PlayerActivity extends Activity {
 				int lastProgress = 50;
 				public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 					assert (progress >= 0 && progress <= 100);
-					spm = ((double) progress) / 50.0d * bpm; 
 					lastProgress = progress;
-					updateSPMandPlayback();
 				}
 				public void onStartTrackingTouch(SeekBar seekBar) {
 				}
 				public void onStopTrackingTouch(SeekBar seekBar) {
-					int permille = (lastProgress - 50) * 20;
-					setStereoPositionUriAudioPlayer(permille);
+					spm = ((double) lastProgress) / 50.0d * bpm;
+
+					TextView tv = (TextView) findViewById(R.id.spm_count);
+					tv.setText("" + spm);
+
+					if (spm_old != 0) {
+						spm_delta = ((spm - spm_old) / spm_old * 1000) + 1000;
+						setPlaybackRate((int) spm_delta);
+					}
+					spm_old = spm;
 				}
 			});
 		} else {
 			stepPos.setVisibility(View.GONE);
+		}
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == SELECT_RC) {
+			if (resultCode == RESULT_OK) {
+				String path = data.getDataString();
+				loadAudioAsset(path);
+				Log.d(DEBUG, path);
+			}
 		}
 	}
 
@@ -380,10 +359,10 @@ public class PlayerActivity extends Activity {
 			try {
 				try {
 					Track tr = en.uploadTrack(params[0], true);
-					tr.waitForAnalysis(ONE_SECOND * 10);
+					tr.waitForAnalysis(ONE_SECOND * 30);
 					if (tr.getStatus() == Track.AnalysisStatus.COMPLETE) {
 						trAnalysis = tr.getAnalysis();
-						Log.d(DEBUG, "Track BPM: " + bpm);
+						Log.d(DEBUG, "Analysis complete.");
 						ret = true;
 					} else {
 						Log.d(DEBUG, "Track Status Error: " + tr.getStatus());
@@ -399,6 +378,9 @@ public class PlayerActivity extends Activity {
 
 		@Override
 		protected void onPostExecute(Boolean result) {
+			trAnalyzing.dismiss();
+			trAnalyzed = result;
+			
 			if (result) {
 				postAnalysis();
 			} else {
