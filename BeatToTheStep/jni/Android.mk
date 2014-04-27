@@ -7,5 +7,6 @@ LOCAL_SRC_FILES := beat-step.c
 
 LOCAL_LDLIBS	+= -lOpenSLES
 LOCAL_LDLIBS	+= -landroid
+LOCAL_LDLIBS    += -llog
 
 include $(BUILD_SHARED_LIBRARY)

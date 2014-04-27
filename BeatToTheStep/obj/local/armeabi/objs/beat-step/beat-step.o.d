@@ -7,6 +7,7 @@
  /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/jni.h \
  /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/string.h \
  /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/malloc.h \
+ /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/android/log.h \
  /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/SLES/OpenSLES.h \
  /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/SLES/OpenSLES_Platform.h \
  /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/SLES/OpenSLES_Android.h \
@@ -42,6 +43,8 @@
 /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/string.h:
 
 /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/malloc.h:
+
+/home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/android/log.h:
 
 /home/nolnoch/git/beat-step/BeatToTheStep/jni/android-ndk-r9d/platforms/android-19/arch-arm/usr/include/SLES/OpenSLES.h:
 

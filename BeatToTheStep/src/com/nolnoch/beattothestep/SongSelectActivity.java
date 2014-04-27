@@ -16,7 +16,7 @@ public class SongSelectActivity extends Activity {
 
 	private SimpleCursorAdapter songAdapter;
 	private ListView songList;
-	private Cursor songCursor;
+	private Cursor songCursor, artCursor;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +34,8 @@ public class SongSelectActivity extends Activity {
 				MediaStore.Audio.Media._ID,
 				MediaStore.Audio.Media.TITLE,
 				MediaStore.Audio.Media.ARTIST,
-				MediaStore.Audio.Media.DATA 
+				MediaStore.Audio.Media.ALBUM_ID,
+				MediaStore.Audio.Media.DATA
 		};
 		String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
 		
@@ -68,7 +69,33 @@ public class SongSelectActivity extends Activity {
 				String path = songCursor.getString(
 						songCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
 				data.setData(Uri.parse(path));
+				data.putExtra("title", songCursor.getString(
+						songCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)));
+				data.putExtra("artist", songCursor.getString(
+						songCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)));
+				
+				String albumID = songCursor.getString(
+						songCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID));
+				
+				String[] projection = {
+						MediaStore.Audio.Albums._ID,
+						MediaStore.Audio.Albums.ALBUM_ART 
+				};
+				String selection = MediaStore.Audio.Albums._ID + "=?";
+				
+				artCursor = getApplicationContext().getContentResolver().query(
+						MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+						projection,
+						selection,
+						new String[] {albumID},
+						null
+				);
+				
+				artCursor.moveToFirst();
+				data.putExtra("art", artCursor.getString(
+						artCursor.getColumnIndexOrThrow(MediaStore.Audio.Albums.ALBUM_ART)));
 				setResult(RESULT_OK, data);
+				artCursor.close();
 				
 				songCursor.close();
 				finish();

@@ -28,7 +28,7 @@
 #include <string.h>
 
 // for __android_log_print(ANDROID_LOG_INFO, "YourApp", "formatted message");
-// #include <android/log.h>
+#include <android/log.h>
 
 // for native audio
 #include <SLES/OpenSLES.h>
@@ -39,6 +39,15 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 
+#ifdef ANDROID
+#define LOG_TAG "JNI_DEBUG"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
+#else
+#define LOGD printf
+#define LOGE printf
+#endif
+
 
 // engine interfaces
 static SLObjectItf engineObject = NULL;
@@ -46,7 +55,7 @@ static SLEngineItf engineEngine;
 
 // output mix interfaces
 static SLObjectItf outputMixObject = NULL;
-static SLEnvironmentalReverbItf outputMixEnvironmentalReverb = NULL;
+static SLPlaybackRateItf outputMixPlaybackRate = NULL;
 
 // buffer queue player interfaces
 static SLObjectItf bqPlayerObject = NULL;
@@ -124,9 +133,7 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_createEngine(JNIEnv* env, jcl
   (void)result;
 
   // create output mix, with environmental reverb specified as a non-required interface
-  const SLInterfaceID ids[1] = {SL_IID_ENVIRONMENTALREVERB};
-  const SLboolean req[1] = {SL_BOOLEAN_FALSE};
-  result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject, 1, ids, req);
+  result = (*engineEngine)->CreateOutputMix(engineEngine, &outputMixObject, 0, NULL, NULL);
   assert(SL_RESULT_SUCCESS == result);
   (void)result;
 
@@ -134,19 +141,6 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_createEngine(JNIEnv* env, jcl
   result = (*outputMixObject)->Realize(outputMixObject, SL_BOOLEAN_FALSE);
   assert(SL_RESULT_SUCCESS == result);
   (void)result;
-
-  // get the environmental reverb interface
-  // this could fail if the environmental reverb effect is not available,
-  // either because the feature is not present, excessive CPU load, or
-  // the required MODIFY_AUDIO_SETTINGS permission was not requested and granted
-  result = (*outputMixObject)->GetInterface(outputMixObject, SL_IID_ENVIRONMENTALREVERB,
-      &outputMixEnvironmentalReverb);
-  if (SL_RESULT_SUCCESS == result) {
-    result = (*outputMixEnvironmentalReverb)->SetEnvironmentalReverbProperties(
-        outputMixEnvironmentalReverb, &reverbSettings);
-    (void)result;
-  }
-  // ignore unsuccessful result codes for environmental reverb, as it is optional for this example
 
 }
 
@@ -252,10 +246,10 @@ jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createUriAudioPlayer(JNIE
   SLDataSink audioSnk = {&loc_outmix, NULL};
 
   // create audio player
-  const SLInterfaceID ids[3] = {SL_IID_SEEK, SL_IID_MUTESOLO, SL_IID_VOLUME};
-  const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+  const SLInterfaceID ids[4] = {SL_IID_SEEK, SL_IID_MUTESOLO, SL_IID_VOLUME, SL_IID_PLAYBACKRATE};
+  const SLboolean req[4] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
   result = (*engineEngine)->CreateAudioPlayer(engineEngine, &uriPlayerObject, &audioSrc,
-      &audioSnk, 3, ids, req);
+      &audioSnk, 4, ids, req);
   // note that an invalid URI is not detected here, but during prepare/prefetch on Android,
   // or possibly during Realize on other platforms
   assert(SL_RESULT_SUCCESS == result);
@@ -293,7 +287,7 @@ jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createUriAudioPlayer(JNIE
   assert(SL_RESULT_SUCCESS == result);
   (void)result;
 
-  // get the volume interface
+  // get the playback rate interface
   result = (*uriPlayerObject)->GetInterface(uriPlayerObject, SL_IID_PLAYBACKRATE, &uriPlayerRate);
   assert(SL_RESULT_SUCCESS == result);
   (void)result;
@@ -456,27 +450,6 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_setStereoPositionUriAudioPlay
   }
 }
 
-// enable reverb on the buffer queue player
-jboolean Java_com_nolnoch_beattothestep_PlayerActivity_enableReverb(JNIEnv* env, jclass clazz,
-    jboolean enabled)
-{
-  SLresult result;
-
-  // we might not have been able to add environmental reverb to the output mix
-  if (NULL == outputMixEnvironmentalReverb) {
-    return JNI_FALSE;
-  }
-
-  result = (*bqPlayerEffectSend)->EnableEffectSend(bqPlayerEffectSend,
-      outputMixEnvironmentalReverb, (SLboolean) enabled, (SLmillibel) 0);
-  // and even if environmental reverb was present, it might no longer be available
-  if (SL_RESULT_SUCCESS != result) {
-    return JNI_FALSE;
-  }
-
-  return JNI_TRUE;
-}
-
 
 // select the desired clip and play count, and enqueue the first buffer if idle
 jboolean Java_com_nolnoch_beattothestep_PlayerActivity_selectClip(JNIEnv* env, jclass clazz, jint which,
@@ -548,10 +521,10 @@ jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createAssetAudioPlayer(JN
   SLDataSink audioSnk = {&loc_outmix, NULL};
 
   // create audio player
-  const SLInterfaceID ids[3] = {SL_IID_SEEK, SL_IID_MUTESOLO, SL_IID_VOLUME};
-  const SLboolean req[3] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+  const SLInterfaceID ids[4] = {SL_IID_SEEK, SL_IID_MUTESOLO, SL_IID_VOLUME, SL_IID_PLAYBACKRATE};
+    const SLboolean req[4] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
   result = (*engineEngine)->CreateAudioPlayer(engineEngine, &fdPlayerObject, &audioSrc, &audioSnk,
-      3, ids, req);
+      4, ids, req);
   assert(SL_RESULT_SUCCESS == result);
   (void)result;
 
@@ -581,9 +554,9 @@ jboolean Java_com_nolnoch_beattothestep_PlayerActivity_createAssetAudioPlayer(JN
   (void)result;
 
   // get the volume interface
-  //result = (*fdPlayerObject)->GetInterface(fdPlayerObject, SL_IID_PLAYBACKRATE, &fdPlayerRate);
-  //assert(SL_RESULT_SUCCESS == result);
-  //(void)result;
+  result = (*fdPlayerObject)->GetInterface(fdPlayerObject, SL_IID_PLAYBACKRATE, &fdPlayerRate);
+  assert(SL_RESULT_SUCCESS == result);
+  (void)result;
 
   // enable whole file looping
   result = (*fdPlayerSeek)->SetLoop(fdPlayerSeek, SL_BOOLEAN_TRUE, 0, SL_TIME_UNKNOWN);
@@ -653,7 +626,7 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_shutdown(JNIEnv* env, jclass 
   if (outputMixObject != NULL) {
     (*outputMixObject)->Destroy(outputMixObject);
     outputMixObject = NULL;
-    outputMixEnvironmentalReverb = NULL;
+    outputMixPlaybackRate = NULL;
   }
 
   // destroy engine object, and invalidate all associated interfaces
@@ -679,13 +652,20 @@ int Java_com_nolnoch_beattothestep_PlayerActivity_getPlaybackRate(JNIEnv *env, j
   SLpermille rate;
   SLresult result;
 
+  SLuint32 capabilities = 0;
+  SLpermille minRate = 0;
+  SLpermille maxRate = 0;
+  SLpermille stepSize = 0;
+
   rate = 0;
   SLPlaybackRateItf playbackRateItf = getRate();
   if (NULL != playbackRateItf) {
-    result = (*playbackRateItf)->GetRate(playbackRateItf, &rate);
+    result = (*playbackRateItf)->GetRateRange(playbackRateItf, 0, &minRate, &maxRate, &stepSize, &capabilities);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
   }
+
+  LOGD("Min: %d, Max: %d, Step: %d, Options: %d\n", minRate, maxRate, stepSize, capabilities);
 
   return rate;
 }
@@ -696,10 +676,11 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_setPlaybackRate(JNIEnv *env, 
   SLpermille pRate = rate;
   SLPlaybackRateItf playbackRateItf = getRate();
   if (NULL != playbackRateItf) {
-    result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_PITCHCORAUDIO);
-    // assert(SL_RESULT_SUCCESS == result);
-    result = (*playbackRateItf)->SetRate(playbackRateItf, rate);
+    result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_NOPITCHCORAUDIO);
+    assert(SL_RESULT_SUCCESS == result);
+    result = (*playbackRateItf)->SetRate(playbackRateItf, pRate);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
+    LOGD("Set playback rate to: %d\n", rate);
   }
 }
