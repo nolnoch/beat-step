@@ -887,10 +887,8 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_setPlaybackRate(JNIEnv *env, 
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
     
-    if (capabilities & SL_RATEPROP_PITCHCORAUDIO)
-        result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_PITCHCORAUDIO);
-    else
-        result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_NOPITCHCORAUDIO);
+    result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, (capabilities & SL_RATEPROP_PITCHCORAUDIO)
+        ? SL_RATEPROP_PITCHCORAUDIO : SL_RATEPROP_NOPITCHCORAUDIO);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
     
