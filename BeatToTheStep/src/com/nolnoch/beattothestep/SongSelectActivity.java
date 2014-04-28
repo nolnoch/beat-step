@@ -11,6 +11,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 public class SongSelectActivity extends Activity {
 
@@ -28,6 +29,8 @@ public class SongSelectActivity extends Activity {
 
 	@SuppressWarnings("deprecation")
 	private void populateList() {
+		int songCount = 0;
+		
 		songList = (ListView) findViewById(R.id.songs_list);
 
 		String[] projection = {
@@ -46,6 +49,7 @@ public class SongSelectActivity extends Activity {
 				null,
 				null
 		);
+		songCount = songCursor.getCount();
 
 		String[] from = new String[] {MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST};
 		int[] to = new int[] {R.id.text1, R.id.text2};
@@ -102,6 +106,11 @@ public class SongSelectActivity extends Activity {
 			}
 			
 		});
+		
+		if (songCount != 0) {
+			TextView tv = (TextView) findViewById(R.id.empty);
+			tv.setVisibility(View.GONE);
+		}
 	}
 	
 	public void selectCancel(View v) {

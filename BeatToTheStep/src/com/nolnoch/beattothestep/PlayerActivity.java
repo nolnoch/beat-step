@@ -65,8 +65,6 @@ public class PlayerActivity extends Activity {
 	private static EchoNestAPI en;
 	private String enAPIKey = "AWC7MGBH4CCN9Z8QX"; 
 	private TrackAnalysis trAnalysis;
-	public static AssetManager am;
-	public static String demo_song = "une_seule_asset.mp3";
 	public static String ap_song;
 	public static String sTitle, sArtist, sArt;
 	
@@ -92,6 +90,7 @@ public class PlayerActivity extends Activity {
 		spm = 101.0d;
 
 		createEngine();
+		createBufferQueueAudioPlayer();
 		initEchoNestAPI();
 
 		stepCounting = createStepSensor();
@@ -127,17 +126,6 @@ public class PlayerActivity extends Activity {
 		startActivityForResult(new Intent(this, SongSelectActivity.class), SELECT_RC);
 	}
 
-	private void setupDemoTrack() {
-		TextView tv;
-
-		loadAudioAsset(demo_song);
-
-		tv = (TextView) findViewById(R.id.song_title);
-		tv.setText("Une Seule Vie");
-		tv = (TextView) findViewById(R.id.artist_title);
-		tv.setText("De Palmas");
-	}
-
 	private void initEchoNestAPI() {
 		en = new EchoNestAPI(enAPIKey);
 	}
@@ -171,11 +159,15 @@ public class PlayerActivity extends Activity {
 		iv.setImageDrawable(albumArt);
 
 		if (!apCreated) {
-			apCreated = createUriAudioPlayer(ap_song);
-			Log.d(DEBUG, "AssetPlayer created.");
+			//apCreated = createUriAudioPlayer(ap_song);
+			apCreated = createDecoderPlayer(ap_song);
+			if (apCreated)
+				Log.d(DEBUG, "DecoderPlayer created.");
+			else
+				Log.e(DEBUG, "DecoderPlayer failed.");
 		}
-
 		getPlaybackRate();
+		setDecodingDecoderPlayer();
 	}
 
 	private void createStepTimer() {
@@ -204,8 +196,8 @@ public class PlayerActivity extends Activity {
 					tick = 0;
 				}
 
-				if (!isPlayingAsset && tick == 1) {
-					playDemoAsset();
+				if (!isPlayingUri && tick == 1) {
+					playMusic(null);
 				}
 			}
 
@@ -229,16 +221,6 @@ public class PlayerActivity extends Activity {
 		stepTimer.scheduleAtFixedRate(stepTask, 0, TIME_INTERVAL);
 	}
 
-	private void playDemoAsset() {
-		if (!apCreated) {
-			am = getAssets();
-			apCreated = createAssetAudioPlayer(am, demo_song);
-			Log.d(DEBUG, "AssetPlayer created.");
-		}
-
-		setPlayingAssetAudioPlayer(isPlayingAsset);
-	}
-
 	public void countButton(View v) {
 		initStepEngine();
 	}
@@ -247,15 +229,15 @@ public class PlayerActivity extends Activity {
 		ImageButton playPause = (ImageButton) findViewById(R.id.play_pause);
 
 		if (spm != 0 && apCreated) {
-			isPlayingAsset = !isPlayingAsset;
+			isPlayingUri = !isPlayingUri;
 
-			if (isPlayingAsset) {
+			if (isPlayingUri) {
 				playPause.setBackgroundResource(R.drawable.media_pause);
 			} else {
 				playPause.setBackgroundResource(R.drawable.media_play);
 			}
 
-			setPlayingUriAudioPlayer(isPlayingAsset);
+			setPlayingBufferedQueueAudioPlayer(isPlayingUri);
 		} else {
 			Toast.makeText(
 					getApplicationContext(),
@@ -334,7 +316,6 @@ public class PlayerActivity extends Activity {
 	protected void onPause()
 	{
 		// turn off all audio
-		selectClip(CLIP_NONE, 0);
 		if (isPlayingAsset) {
 			isPlayingAsset = false;
 			setPlayingAssetAudioPlayer(false);
@@ -425,22 +406,26 @@ public class PlayerActivity extends Activity {
 	// Basic functions from NDK sample.
 	public static native void createEngine();
 	public static native void createBufferQueueAudioPlayer();
-	public static native boolean createAssetAudioPlayer(AssetManager assetManager, String filename);
-	public static native void setPlayingAssetAudioPlayer(boolean isPlaying);
+	public static native void setPlayingBufferedQueueAudioPlayer(boolean isPlaying);
+	
 	public static native boolean createUriAudioPlayer(String uri);
 	public static native void setPlayingUriAudioPlayer(boolean isPlaying);
+	
+	public static native boolean createDecoderPlayer(String uri);
+	public static native void setDecodingDecoderPlayer();
+	
 	public static native void setLoopingUriAudioPlayer(boolean isLooping);
 	public static native void setChannelMuteUriAudioPlayer(int chan, boolean mute);
 	public static native void setChannelSoloUriAudioPlayer(int chan, boolean solo);
 	public static native int getNumChannelsUriAudioPlayer();
 	public static native void setVolumeUriAudioPlayer(int millibel);
 	public static native void setMuteUriAudioPlayer(boolean mute);
-	public static native void enableStereoPositionUriAudioPlayer(boolean enable);
-	public static native void setStereoPositionUriAudioPlayer(int permille);
-	public static native boolean selectClip(int which, int count);
+	
+	public static native boolean createAssetAudioPlayer(AssetManager assetManager, String filename);
+	public static native void setPlayingAssetAudioPlayer(boolean isPlaying);
+	
 	public static native void shutdown();
 
-	// TODO Implement functions for time stretching.
 	public static native int getPlaybackRate();
 	public static native void setPlaybackRate(int rate);
 
