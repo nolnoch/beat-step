@@ -875,15 +875,29 @@ int Java_com_nolnoch_beattothestep_PlayerActivity_getPlaybackRate(JNIEnv *env, j
 
 void Java_com_nolnoch_beattothestep_PlayerActivity_setPlaybackRate(JNIEnv *env, jclass clazz, jint rate) {
   SLresult result;
-
   SLpermille pRate = rate;
+  SLuint32 capabilities = 0;
+  SLpermille minRate = 0;
+  SLpermille maxRate = 0;
+  SLpermille stepSize = 0;
+
   SLPlaybackRateItf playbackRateItf = bqPlayerRate;
   if (NULL != playbackRateItf) {
-    result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_NOPITCHCORAUDIO);
+    result = (*playbackRateItf)->GetRateRange(playbackRateItf, 0, &minRate, &maxRate, &stepSize, &capabilities);
     assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+    
+    if (capabilities & SL_RATEPROP_PITCHCORAUDIO)
+        result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_PITCHCORAUDIO);
+    else
+        result = (*playbackRateItf)->SetPropertyConstraints(playbackRateItf, SL_RATEPROP_NOPITCHCORAUDIO);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+    
     result = (*playbackRateItf)->SetRate(playbackRateItf, pRate);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
+    
     LOGD("Set playback rate to: %d\n", rate);
   }
 }
