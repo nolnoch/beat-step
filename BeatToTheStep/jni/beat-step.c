@@ -72,7 +72,7 @@ static SLPlayItf bqPlayerPlay;
 static SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
 static SLEffectSendItf bqPlayerEffectSend;
 static SLMuteSoloItf bqPlayerMuteSolo;
-static SLVolumeItf bqPlayerVolume;
+static SLSeekItf bqPlayerSeek;
 static SLPlaybackRateItf bqPlayerRate;
 
 // aux effect on the output mix, used by the buffer queue player
@@ -101,7 +101,7 @@ static unsigned nextSize;
 static int nextCount;
 
 #define MEGABYTE (1024 * 1024)
-#define BUFFER_FRAMES (18 * MEGABYTE)
+#define BUFFER_FRAMES (11 * MEGABYTE)
 #define BUFFER_BYTES (2 * BUFFER_FRAMES)
 static SLint16 songBuffer[BUFFER_FRAMES];
 
@@ -196,8 +196,8 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_createBufferQueueAudioPlayer(
   SLDataSink audioSnk = {&loc_outmix, NULL};
 
   // create audio player
-  const SLInterfaceID ids[4] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND, SL_IID_VOLUME, SL_IID_PLAYBACKRATE};
-  const SLboolean req[4] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE};
+  const SLInterfaceID ids[4] = {SL_IID_BUFFERQUEUE, SL_IID_EFFECTSEND, SL_IID_SEEK, SL_IID_PLAYBACKRATE};
+  const SLboolean req[4] = {SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE, SL_BOOLEAN_FALSE, SL_BOOLEAN_TRUE};
   result = (*engineEngine)->CreateAudioPlayer(engineEngine, &bqPlayerObject, &audioSrc, &audioSnk,
       4, ids, req);
   assert(SL_RESULT_SUCCESS == result);
@@ -238,7 +238,7 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_createBufferQueueAudioPlayer(
 #endif
 
   // get the volume interface
-  result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_VOLUME, &bqPlayerVolume);
+  result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_SEEK, &bqPlayerSeek);
   assert(SL_RESULT_SUCCESS == result);
   (void)result;
 
@@ -267,6 +267,47 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_setPlayingBufferedQueueAudioP
     // set the player's state
     result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, isPlaying ?
         SL_PLAYSTATE_PLAYING : SL_PLAYSTATE_PAUSED);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+  }
+
+}
+
+
+void Java_com_nolnoch_beattothestep_PlayerActivity_setResetBufferedQueueAudioPlayer(JNIEnv* env,
+    jclass clazz)
+{
+  SLresult result;
+  SLmillisecond pos = 0;
+
+  // make sure the BQ audio player was created
+  if (NULL != bqPlayerSeek) {
+
+    // set the player's state
+    result = (*bqPlayerSeek)->SetPosition(bqPlayerSeek, pos, SL_SEEKMODE_FAST);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+  }
+
+}
+
+void Java_com_nolnoch_beattothestep_PlayerActivity_setSeekBufferedQueueAudioPlayer(JNIEnv* env,
+    jclass clazz)
+{
+  SLresult result;
+  SLmillisecond pos = 0;
+
+  // make sure the BQ audio player was created
+  if ((NULL != bqPlayerSeek) && (NULL != bqPlayerPlay)) {
+
+    result = (*bqPlayerPlay)->GetPosition(bqPlayerPlay, &pos);
+    assert(SL_RESULT_SUCCESS == result);
+    (void)result;
+
+    pos += 10 * 1000;
+
+    // set the player's state
+    result = (*bqPlayerSeek)->SetPosition(bqPlayerSeek, pos, SL_SEEKMODE_FAST);
     assert(SL_RESULT_SUCCESS == result);
     (void)result;
   }
@@ -549,10 +590,8 @@ static SLVolumeItf getVolume()
 {
   if (uriPlayerVolume != NULL)
     return uriPlayerVolume;
-  else if (fdPlayerVolume != NULL)
-    return fdPlayerVolume;
   else
-    return bqPlayerVolume;
+    return fdPlayerVolume;
 }
 
 void Java_com_nolnoch_beattothestep_PlayerActivity_setVolumeUriAudioPlayer(JNIEnv* env, jclass clazz,
@@ -749,8 +788,19 @@ void Java_com_nolnoch_beattothestep_PlayerActivity_shutdown(JNIEnv* env, jclass 
     bqPlayerBufferQueue = NULL;
     bqPlayerEffectSend = NULL;
     bqPlayerMuteSolo = NULL;
-    bqPlayerVolume = NULL;
+    bqPlayerSeek = NULL;
     bqPlayerRate = NULL;
+  }
+
+  // destroy buffer queue audio player object, and invalidate all associated interfaces
+  if (dcPlayerObject != NULL) {
+    (*dcPlayerObject)->Destroy(dcPlayerObject);
+    dcPlayerObject = NULL;
+    dcPlayerPlay = NULL;
+    dcPlayerBufferQueue = NULL;
+    dcPlayerEffectSend = NULL;
+    dcPlayerMuteSolo = NULL;
+    dcPlayerRate = NULL;
   }
 
   // destroy file descriptor audio player object, and invalidate all associated interfaces

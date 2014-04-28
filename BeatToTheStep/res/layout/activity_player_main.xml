@@ -12,14 +12,15 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" >
 
         <TextView
             android:id="@+id/song_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:maxLength="20"
+            android:maxLength="26"
             android:text="@string/music_song_title"
             android:textSize="18sp" />
 
@@ -29,17 +30,18 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@id/song_title"
-            android:maxLength="20"
+            android:maxLength="26"
             android:text="@string/music_artist_title"
-            android:textSize="12sp" />
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/bpm_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
+            android:layout_marginTop="3dp"
             android:text="@string/music_bpm_count"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/spm_count"
@@ -48,7 +50,7 @@
             android:layout_alignParentRight="true"
             android:layout_below="@id/bpm_count"
             android:text="@string/music_spm_count"
-            android:textSize="13sp" />
+            android:textSize="14sp" />
     </RelativeLayout>
 
     <ImageView
@@ -95,6 +97,7 @@
                 android:layout_marginRight="25dp"
                 android:contentDescription="@string/music_rewind"
                 android:scaleType="fitXY"
+                android:onClick="resetSong"
                 android:src="@drawable/media_previous" />
 
             <ImageButton
@@ -117,6 +120,7 @@
                 android:layout_marginLeft="25dp"
                 android:contentDescription="@string/music_fast_forward"
                 android:scaleType="fitXY"
+                android:onClick="seekSong"
                 android:src="@drawable/media_next" />
 
         </LinearLayout>
@@ -125,10 +129,14 @@
             android:id="@+id/select_song"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:layout_marginTop="20dp"
             android:layout_below="@id/button_bar"
             android:layout_centerHorizontal="true"
-            android:background="#DDCCFF"
+            android:background="#F3D9FF"
             android:text="@string/button_select"
             android:onClick="launchSelectSong"
             style="?android:attr/buttonBarButtonStyle"/>

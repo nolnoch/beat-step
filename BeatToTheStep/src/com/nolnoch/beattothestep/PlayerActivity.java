@@ -3,25 +3,21 @@ package com.nolnoch.beattothestep;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -67,16 +63,17 @@ public class PlayerActivity extends Activity {
 	private TrackAnalysis trAnalysis;
 	public static String ap_song;
 	public static String sTitle, sArtist, sArt;
-	
 
-	private TimerTask stepTask;
-	private Timer stepTimer;
+
+	//private TimerTask stepTask;
+	//private Timer stepTimer;
 	private ProgressDialog trAnalyzing;
+	private SeekBar stepPos;
 	private Context context;
 
-	private SensorEventListener stepListener;
-	private SensorManager sensorManager;
-	private Sensor stepSensor;
+	//private SensorEventListener stepListener;
+	//private SensorManager sensorManager;
+	//private Sensor stepSensor;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -87,17 +84,15 @@ public class PlayerActivity extends Activity {
 		stepStart = new ArrayList<Long>(NUM_TIME_STEPS);
 		tick = 0;
 
-		spm = 101.0d;
-
-		createEngine();
-		createBufferQueueAudioPlayer();
 		initEchoNestAPI();
 
+		/*
 		stepCounting = createStepSensor();
 		if (stepCounting) {
 			createStepTimer();
 			Log.d(DEBUG, "Step Counter loaded.");
 		}
+		 */
 
 		initUIControls();
 	}
@@ -122,10 +117,6 @@ public class PlayerActivity extends Activity {
 		return true;
 	}
 
-	public void launchSelectSong(View v) {
-		startActivityForResult(new Intent(this, SongSelectActivity.class), SELECT_RC);
-	}
-
 	private void initEchoNestAPI() {
 		en = new EchoNestAPI(enAPIKey);
 	}
@@ -144,32 +135,40 @@ public class PlayerActivity extends Activity {
 	private void postAnalysis() {
 		bpm = trAnalysis.getTempo();
 		spm = bpm;
+		
+		stepPos.setProgress(50);
 
 		TextView tv = (TextView) findViewById(R.id.bpm_count);
-		tv.setText("" + bpm);
+		tv.setText("BPM: " + Integer.toString((int) bpm));
 		tv = (TextView) findViewById(R.id.spm_count);
-		tv.setText("" + spm);
+		tv.setText("SPM: " + Integer.toString((int) spm));
 		tv = (TextView) findViewById(R.id.song_title);
 		tv.setText(sTitle);
 		tv = (TextView) findViewById(R.id.artist_title);
 		tv.setText(sArtist);
-		
+
 		ImageView iv = (ImageView) findViewById(R.id.album_art);
 		Drawable albumArt = Drawable.createFromPath(sArt);
 		iv.setImageDrawable(albumArt);
 
-		if (!apCreated) {
-			//apCreated = createUriAudioPlayer(ap_song);
-			apCreated = createDecoderPlayer(ap_song);
-			if (apCreated)
-				Log.d(DEBUG, "DecoderPlayer created.");
-			else
-				Log.e(DEBUG, "DecoderPlayer failed.");
+		if (apCreated) {
+			shutdown();
 		}
-		getPlaybackRate();
-		setDecodingDecoderPlayer();
+		
+		createEngine();
+		createBufferQueueAudioPlayer();
+		apCreated = createDecoderPlayer(ap_song);
+		
+		if (!apCreated)
+			Log.e(DEBUG, "DecoderPlayer failed.");
+		else {
+			Log.d(DEBUG, "DecoderPlayer created.");
+			getPlaybackRate();
+			setDecodingDecoderPlayer();
+		}
 	}
 
+	/*
 	private void createStepTimer() {
 		stepTask = new TimerTask() {
 
@@ -205,6 +204,7 @@ public class PlayerActivity extends Activity {
 
 		stepTimer = new Timer("stepTimer", true);
 	}
+	
 
 	private boolean createStepSensor() {
 		stepListener = new StepListener();
@@ -217,12 +217,23 @@ public class PlayerActivity extends Activity {
 			return false;
 	}
 
+	
 	private void initStepEngine() {
 		stepTimer.scheduleAtFixedRate(stepTask, 0, TIME_INTERVAL);
 	}
+	*/
 
-	public void countButton(View v) {
-		initStepEngine();
+	public void launchSelectSong(View v) {
+		if (isPlayingUri) {
+			isPlayingUri = false;
+	
+			ImageButton playPause = (ImageButton) findViewById(R.id.play_pause);
+			playPause.setBackgroundResource(R.drawable.media_play);
+	
+			setPlayingBufferedQueueAudioPlayer(isPlayingUri);
+		}
+	
+		startActivityForResult(new Intent(this, SongSelectActivity.class), SELECT_RC);
 	}
 
 	public void playMusic(View v) {
@@ -247,9 +258,19 @@ public class PlayerActivity extends Activity {
 		}
 	}
 
+	public void resetSong(View v) {
+		if (apCreated)
+			setResetBufferedQueueAudioPlayer();
+	}
+
+	public void seekSong(View v) {
+		if (apCreated)
+			setSeekBufferedQueueAudioPlayer();
+	}
+
 	public void initUIControls() {
 		// If step counter is not working, use slider to control SPM manually.
-		SeekBar stepPos = (SeekBar) findViewById(R.id.rate_seekbar);
+		stepPos = (SeekBar) findViewById(R.id.rate_seekbar);
 		if (!stepCounting) {
 			spm_old = spm;
 			stepPos.setVisibility(View.VISIBLE);
@@ -271,8 +292,8 @@ public class PlayerActivity extends Activity {
 					power = ((double) lastProgress) / 50.0d;
 					spm = power * bpm;
 					TextView tv = (TextView) findViewById(R.id.spm_count);
-					tv.setText("" + spm);
-					
+					tv.setText("SPM: " + Integer.toString((int) spm));
+
 					// Get integer rate in scale (500, 2000)
 					product = Math.pow(2.0d, power) * 500.0d;
 					rate = (int) product;					
@@ -302,12 +323,15 @@ public class PlayerActivity extends Activity {
 
 	@Override
 	protected void onResume() {
+		
+		/*
 		stepCounting = createStepSensor();
 		if (stepCounting)
 			createStepTimer();
 		else {
 			// custom algorithm to detect step? (ugh)
 		}
+		*/
 
 		super.onResume();
 	}
@@ -326,11 +350,13 @@ public class PlayerActivity extends Activity {
 		}
 
 
+		/*
 		if (stepCounting) {
 			stepTimer.cancel();
 			stepTimer.purge();
 			sensorManager.unregisterListener(stepListener);
 		}
+		*/
 
 		super.onPause();
 	}
@@ -343,6 +369,7 @@ public class PlayerActivity extends Activity {
 	}
 
 
+	/*
 	private class StepListener implements SensorEventListener {
 
 		@Override
@@ -354,6 +381,7 @@ public class PlayerActivity extends Activity {
 		public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
 	}
+	*/
 
 	private class AnalyzeTrackTask extends AsyncTask<File, Integer, Boolean> {
 
@@ -407,23 +435,25 @@ public class PlayerActivity extends Activity {
 	public static native void createEngine();
 	public static native void createBufferQueueAudioPlayer();
 	public static native void setPlayingBufferedQueueAudioPlayer(boolean isPlaying);
-	
+	public static native void setResetBufferedQueueAudioPlayer();
+	public static native void setSeekBufferedQueueAudioPlayer();
+
 	public static native boolean createUriAudioPlayer(String uri);
 	public static native void setPlayingUriAudioPlayer(boolean isPlaying);
-	
+
 	public static native boolean createDecoderPlayer(String uri);
 	public static native void setDecodingDecoderPlayer();
-	
+
 	public static native void setLoopingUriAudioPlayer(boolean isLooping);
 	public static native void setChannelMuteUriAudioPlayer(int chan, boolean mute);
 	public static native void setChannelSoloUriAudioPlayer(int chan, boolean solo);
 	public static native int getNumChannelsUriAudioPlayer();
 	public static native void setVolumeUriAudioPlayer(int millibel);
 	public static native void setMuteUriAudioPlayer(boolean mute);
-	
+
 	public static native boolean createAssetAudioPlayer(AssetManager assetManager, String filename);
 	public static native void setPlayingAssetAudioPlayer(boolean isPlaying);
-	
+
 	public static native void shutdown();
 
 	public static native int getPlaybackRate();

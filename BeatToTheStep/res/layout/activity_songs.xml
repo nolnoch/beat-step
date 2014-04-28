@@ -32,7 +32,9 @@
         <ListView
             android:id="@+id/songs_list"
             android:layout_width="match_parent"
-            android:layout_height="400dp" />
+            android:layout_height="350dp"
+            android:divider="#CCCCCC"
+            android:dividerHeight="2dp" />
 
         <TextView
             android:id="@+id/empty"
@@ -49,9 +51,10 @@
         style="?android:attr/buttonBarButtonStyle"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:layout_above="@id/spacertext"
+        android:layout_above="@+id/spacertext"
         android:layout_centerHorizontal="true"
-        android:background="#DDCCFF"
+        android:layout_margin="15dp"
+        android:background="#F3D9FF"
         android:onClick="selectCancel"
         android:text="@string/button_cancel" />
 
