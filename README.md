@@ -3,7 +3,7 @@ CS 371M Beta Release - Beat to the Step
 Wade Burch (nolnoch)
 
 
-[Overview]
+*** Overview ***
 
 
 1. Features
